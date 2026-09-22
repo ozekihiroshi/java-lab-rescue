@@ -4,7 +4,7 @@ Labの実行基盤とMoodleの教材/利用者管理を分け、登録情報JSON
 
 ## 管理者の初回接続
 
-Moodle側の汎用登録アダプターを用意しました。現在はmoodle-rescueの`codex/lab-connection-setup`ブランチにあります（mainへの統合前）。[手順とアダプター](https://github.com/ozekihiroshi/moodle-rescue/blob/codex/lab-connection-setup/docs/lab-connection-setup.md)を参照し、その版のMoodleリポジトリから次を実行します。
+Moodle側の汎用登録アダプターを用意しました。moodle-rescueのmainに含まれています。[手順とアダプター](https://github.com/ozekihiroshi/moodle-rescue/blob/main/docs/lab-connection-setup.md)を参照し、その版のMoodleリポジトリから次を実行します。
 
 ```sh
 python3 scripts/register-lab.py --lab java --url http://localhost:8087 \
@@ -42,4 +42,4 @@ http://localhost:8087/hub/user-redirect/ide/?folder=/home/jovyan/work/java-intro
 
 ## Python Labと共通の手順
 
-両LabともMoodle側の`register-lab.py`でJSONを出力し、Lab側の`scripts/setup.py connect`で取り込みます。Pythonは`--lab python`・8086・`python.json`、Javaは`--lab java`・8087・`java.json`です。起動コマンドと教材URLは各Labの手順に従います。Python側の取り込みは[専用ブランチの導入案内](https://github.com/ozekihiroshi/python-lab-rescue/blob/codex/lab-connection-import/docs/connection.md)で提供しています（main統合前）。
+両LabともMoodle側の`register-lab.py`でJSONを出力し、Lab側の`scripts/setup.py connect`で取り込みます。Pythonは`--lab python`・8086・`python.json`、Javaは`--lab java`・8087・`java.json`です。起動コマンドと教材URLは各Labの手順に従います。Python側の取り込みは[導入案内](https://github.com/ozekihiroshi/python-lab-rescue/blob/main/docs/connection.md)で提供しています。
