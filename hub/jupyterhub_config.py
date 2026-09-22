@@ -7,15 +7,30 @@ c.JupyterHub.hub_bind_url = "http://0.0.0.0:8081"
 c.JupyterHub.hub_connect_url = "http://jupyterhub:8081"
 c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/data/cookie_secret"
 c.JupyterHub.db_url = "sqlite:////srv/jupyterhub/data/hub.sqlite"
-c.JupyterHub.authenticator_class = "ltiauthenticator.lti13.auth.LTI13Authenticator"
-c.Authenticator.allow_all = True
-c.LTI13Authenticator.issuer = os.environ.get("MOODLE_ORIGIN", "http://localhost:8083")
-c.LTI13Authenticator.client_id = [os.environ["LTI_CLIENT_ID"]]
-c.LTI13Authenticator.authorize_url = c.LTI13Authenticator.issuer + "/mod/lti/auth.php"
-c.LTI13Authenticator.jwks_endpoint = "http://jwks:8000/jwks"
-c.LTI13Authenticator.username_key = "sub"
-c.LTI13Authenticator.uri_scheme = "http"
-c.LTI13Authenticator.tool_name = "Java Lab"
+mode = os.environ.get("JAVA_AUTH_MODE", "lti13")
+if mode == "standalone":
+    password = os.environ.get("JAVA_LOCAL_PASSWORD", "")
+    if os.environ.get("JAVA_LOCAL_DEVELOPMENT") != "true" or len(password) < 20 or password.startswith("CHANGE"):
+        raise RuntimeError("Standalone authentication requires explicit local development and a generated password")
+    c.JupyterHub.authenticator_class = "jupyterhub.auth.DummyAuthenticator"
+    c.DummyAuthenticator.password = password
+    c.Authenticator.allow_all = False
+    c.Authenticator.allowed_users = {"learner"}
+else:
+    if mode != "lti13":
+        raise RuntimeError("Unknown Java authentication mode")
+    client = os.environ.get("LTI_CLIENT_ID", "")
+    if not client or "REPLACE" in client:
+        raise RuntimeError("Configure Moodle LTI first")
+    c.JupyterHub.authenticator_class = "ltiauthenticator.lti13.auth.LTI13Authenticator"
+    c.Authenticator.allow_all = True
+    c.LTI13Authenticator.issuer = os.environ.get("MOODLE_ORIGIN", "http://localhost:8083")
+    c.LTI13Authenticator.client_id = [client]
+    c.LTI13Authenticator.authorize_url = c.LTI13Authenticator.issuer + "/mod/lti/auth.php"
+    c.LTI13Authenticator.jwks_endpoint = "http://jwks:8000/jwks"
+    c.LTI13Authenticator.username_key = "sub"
+    c.LTI13Authenticator.uri_scheme = "http"
+    c.LTI13Authenticator.tool_name = "Java Lab"
 c.JupyterHub.spawner_class = "dockerspawner.DockerSpawner"
 c.DockerSpawner.image = os.environ.get("JAVA_SINGLEUSER_IMAGE", "java-lab-rescue-singleuser:local")
 c.DockerSpawner.cmd = ["start-singleuser.py"]

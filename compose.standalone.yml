@@ -1,0 +1,47 @@
+# Moodle-free local verification. No external network or JWKS dependency.
+name: java-lab-standalone
+services:
+  singleuser-image:
+    image: java-lab-rescue-singleuser:local
+    profiles: [build]
+    build:
+      context: .
+      dockerfile: singleuser/Dockerfile
+    command: [java, -version]
+  jupyterhub:
+    image: java-lab-rescue-hub:local
+    build:
+      context: .
+      dockerfile: hub/Dockerfile
+    ports: ["127.0.0.1:${JAVA_STANDALONE_PORT:-8088}:8000"]
+    environment:
+      JAVA_AUTH_MODE: standalone
+      JAVA_LOCAL_DEVELOPMENT: "true"
+      JAVA_LOCAL_PASSWORD: ${JAVA_LOCAL_PASSWORD:?Run scripts/setup.py standalone first}
+      JAVA_SINGLEUSER_IMAGE: java-lab-rescue-singleuser:local
+      JAVA_CONTAINER_PREFIX: java-lab-standalone
+      JAVA_LEARNER_NETWORK: java-lab-standalone-learners
+      JAVA_USER_VOLUME_PREFIX: java-lab-standalone-user
+    volumes:
+      - hub_data:/srv/jupyterhub/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [learners, access]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/hub/health', timeout=5)"]
+      interval: 5s
+      timeout: 6s
+      retries: 30
+volumes:
+  hub_data:
+networks:
+  learners:
+    name: java-lab-standalone-learners
+    internal: true
+    ipam:
+      config:
+        - subnet: ${JAVA_STANDALONE_LEARNER_SUBNET:-10.203.100.0/24}
+  access:
+    ipam:
+      config:
+        - subnet: ${JAVA_STANDALONE_ACCESS_SUBNET:-10.203.101.0/24}

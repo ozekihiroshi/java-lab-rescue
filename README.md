@@ -10,7 +10,27 @@ Docker Engine + Composeを使用します。WindowsではWSL内のEngineで動�
 - 初期JavaファイルとオフラインMaven依存、検証ツール。
 - Moodle本体・コース作成・教師用解答・提出物は含みません。教材編集は[moodle-rescue](https://github.com/ozekihiroshi/moodle-rescue)側です。
 
-## 初回構築
+## 最初に選ぶ使い方
+
+| 用途 | 操作 | 接続/保存領域 |
+|---|---|---|
+| Moodleなしの単独検証 | `--standalone` | localhost:8088、専用ユーザー/専用ボリューム |
+| Moodleの授業から利用 | 通常モード | localhost:8087、Moodleの受講者別領域 |
+| 将来のHTTPS限定公開 | `--public` | 別Compose。単独検証のパスワード認証は使用しない |
+
+単独検証だけならMoodleもLTI登録も不要です。
+
+```sh
+python3 scripts/setup.py standalone
+python3 scripts/lab.py --standalone build
+python3 scripts/lab.py --standalone up
+```
+
+`http://127.0.0.1:8088`を開き、ユーザー名`learner`、生成された`.env.standalone`内のパスワードでログインします。停止は`python3 scripts/lab.py --standalone stop`です。localhost限定の検証用で、インターネットには公開しません。繰り返しsetupしても既存パスワードは変えません。
+
+単独検証の作業はMoodle受講者の作業と自動的に混ぜません。初回接続の手順は[連携ガイド](docs/connection.md)を参照してください。
+
+## Moodle連携モードの初回構築
 
 Linux/WSLでDocker EngineとComposeを用意し、Moodleを先に起動します。標準設定ではローカルMoodle `http://localhost:8083` と外部Dockerネットワーク `moodle-rescue-local_local_access` を使います。別のMoodleなら`.env`のURL・ネットワーク名を変更します。
 

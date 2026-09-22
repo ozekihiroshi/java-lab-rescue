@@ -19,8 +19,9 @@ def model():
     if not Path(COMPOSE[COMPOSE.index('--env-file') + 1]).is_file():
         raise RuntimeError('Copy .env.example to .env and configure Moodle first')
     value = json.loads(output(COMPOSE + ['config', '--format', 'json']))
-    client = value['services']['jupyterhub']['environment']['LTI_CLIENT_ID']
-    if not client or 'REPLACE' in client:
+    settings = value['services']['jupyterhub']['environment']
+    client = settings.get('LTI_CLIENT_ID', '')
+    if settings.get('JAVA_AUTH_MODE') != 'standalone' and (not client or 'REPLACE' in client):
         raise RuntimeError('Configure the Moodle LTI client ID in .env')
     return value
 
@@ -66,11 +67,15 @@ def main():
     global COMPOSE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['build', 'up', 'start', 'stop', 'status', 'logs', 'check'])
-    parser.add_argument('--public', action='store_true', help='Explicitly select the separate public environment')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--standalone', action='store_true', help='Moodle-free loopback verification environment')
+    modes.add_argument('--public', action='store_true', help='Explicitly select the separate public environment')
     parser.add_argument('--tail', type=int, default=30)
     args = parser.parse_args()
     if not 1 <= args.tail <= 500:
         parser.error('--tail must be 1..500')
+    if args.standalone:
+        COMPOSE = ['docker', 'compose', '--env-file', str(ROOT / '.env.standalone'), '-f', str(ROOT / 'compose.standalone.yml')]
     if args.public:
         COMPOSE = ['docker', 'compose', '--env-file', str(ROOT / 'public/.env.production'), '-f', str(ROOT / 'public/compose.yml')]
         if args.action == 'build':
