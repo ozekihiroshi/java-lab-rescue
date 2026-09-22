@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+!.env.production.example
+runtime/
+__pycache__/
+*.pyc
+*.class
+target/
+*.tar
+*.tar.gz

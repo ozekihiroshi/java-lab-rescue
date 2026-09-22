@@ -1,0 +1,66 @@
+# Local Java Lab. Moodle is an external LTI platform, not bundled here.
+name: ${COMPOSE_PROJECT_NAME:-java-lab-rescue}
+services:
+  singleuser-image:
+    image: ${JAVA_SINGLEUSER_IMAGE:-java-lab-rescue-singleuser:local}
+    profiles: [build]
+    build:
+      context: .
+      dockerfile: singleuser/Dockerfile
+    command: [java, -version]
+  jupyterhub:
+    image: ${JAVA_HUB_IMAGE:-java-lab-rescue-hub:local}
+    build:
+      context: .
+      dockerfile: hub/Dockerfile
+    ports: ["127.0.0.1:${JAVA_LAB_PORT:-8087}:8000"]
+    environment:
+      LTI_CLIENT_ID: ${LTI_CLIENT_ID:?Configure the prototype Moodle course first}
+      MOODLE_ORIGIN: ${MOODLE_ORIGIN:-http://localhost:8083}
+      JAVA_SINGLEUSER_IMAGE: ${JAVA_SINGLEUSER_IMAGE:-java-lab-rescue-singleuser:local}
+      JAVA_CONTAINER_PREFIX: ${JAVA_CONTAINER_PREFIX:-java-lab-rescue}
+      JAVA_LEARNER_NETWORK: ${JAVA_LEARNER_NETWORK:-java-lab-rescue-learners}
+      JAVA_USER_VOLUME_PREFIX: ${JAVA_USER_VOLUME_PREFIX:-java-lab-rescue-user}
+    volumes:
+      - hub_data:/srv/jupyterhub/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks: [learners, access, services]
+    depends_on:
+      jwks:
+        condition: service_healthy
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/hub/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  jwks:
+    image: ${JAVA_HUB_IMAGE:-java-lab-rescue-hub:local}
+    command: [python, /srv/jupyterhub/jwks.py]
+    environment:
+      MOODLE_ORIGIN: ${MOODLE_ORIGIN:-http://localhost:8083}
+      MOODLE_INTERNAL_URL: ${MOODLE_INTERNAL_URL:-http://moodle-rescue-local}
+    networks: [services, moodle]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/jwks')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  hub_data:
+networks:
+  learners:
+    name: ${JAVA_LEARNER_NETWORK:-java-lab-rescue-learners}
+    internal: true
+  services:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${JAVA_SERVICES_SUBNET:-10.203.99.0/24}
+  access:
+  moodle:
+    external: true
+    name: ${MOODLE_NETWORK:-moodle-rescue-local_local_access}

@@ -1,0 +1,52 @@
+# Standalone HTTPS pilot. Never combine with ../compose.yml.
+name: java-lab-public
+services:
+  jupyterhub:
+    image: ${JAVA_HUB_IMAGE:?Set a published image digest}
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 256
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    command: [jupyterhub, -f, /srv/public/jupyterhub_config.py]
+    environment:
+      JAVA_LAB_HOST: ${JAVA_LAB_HOST:?Required}
+      MOODLE_ORIGIN: ${MOODLE_ORIGIN:?Required}
+      LTI_CLIENT_ID: ${LTI_CLIENT_ID:?Required}
+      LTI_DEPLOYMENT_IDS: ${LTI_DEPLOYMENT_IDS:?Required}
+      JAVA_SINGLEUSER_IMAGE: ${JAVA_SINGLEUSER_IMAGE:?Set a published image digest}
+      JAVA_ACTIVE_SERVER_LIMIT: ${JAVA_ACTIVE_SERVER_LIMIT:?Set a capacity-tested limit}
+    volumes:
+      - hub_data:/srv/jupyterhub/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jupyterhub_config.py:/srv/public/jupyterhub_config.py:ro
+    networks: [learners, proxy, outbound]
+    security_opt: [no-new-privileges:true]
+    labels:
+      traefik.enable: "true"
+      traefik.rescue.gateway: "true"
+      traefik.docker.network: ${TRAEFIK_NETWORK:-rescue_proxy}
+      traefik.http.routers.java-lab-public.rule: Host(`${JAVA_LAB_HOST:?Required}`)
+      traefik.http.routers.java-lab-public.entrypoints: websecure
+      traefik.http.routers.java-lab-public.tls: "true"
+      traefik.http.routers.java-lab-public.tls.certresolver: ${TRAEFIK_CERT_RESOLVER:-myresolver}
+      traefik.http.services.java-lab-public.loadbalancer.server.port: "8000"
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/hub/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 12
+volumes:
+  hub_data:
+networks:
+  learners:
+    name: java-lab-public-learners
+    internal: true
+  outbound:
+  proxy:
+    external: true
+    name: ${TRAEFIK_NETWORK:-rescue_proxy}
