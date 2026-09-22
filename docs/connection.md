@@ -39,3 +39,7 @@ http://localhost:8087/hub/user-redirect/ide/?folder=/home/jovyan/work/java-intro
 ## 試験
 
 `python3 checks/standalone.py`は単独環境のログイン/IDE/Java実行/停止再開後の保持を確認します（単独環境を一度停止）。`python3 checks/test_setup.py`は再取り込みと誤接続拒否を検査します。`checks/local.py`はMoodle連携環境の稼働検査です。署名付きLTIや学生の提出操作は、最後にMoodleから受講者アカウントで通して確認します。
+
+## Python Labと共通の手順
+
+両LabともMoodle側の`register-lab.py`でJSONを出力し、Lab側の`scripts/setup.py connect`で取り込みます。Pythonは`--lab python`・8086・`python.json`、Javaは`--lab java`・8087・`java.json`です。起動コマンドと教材URLは各Labの手順に従います。Python側の取り込みは[専用ブランチの導入案内](https://github.com/ozekihiroshi/python-lab-rescue/blob/codex/lab-connection-import/docs/connection.md)で提供しています（main統合前）。
