@@ -66,3 +66,11 @@ python3 scripts/lab.py stop
 このリポジトリに移したソフトウェア・Javaコードは元のmoodle-rescueのGPL-3.0-or-laterを継承します（[LICENSE](LICENSE)）。依存ソフトウェアは各ライセンスに従います。Dockerイメージ配布時も依存物の通知とライセンス条件を維持してください。
 
 今回の実施結果と未検証範囲は[検証記録](docs/verification.md)を参照してください。
+
+GitHubからcloneしたイメージの初期教材・オフラインMaven検査は、リポジトリ直下で次のように再実行できます（検査用コンテナは終了時に削除し、既存の受講者ボリュームには接続しません）。
+
+```sh
+docker run --rm --network none --memory 1g --cpus 1 \
+  -v "$PWD/checks/image.py:/check.py:ro" --entrypoint python \
+  java-lab-rescue-singleuser:local /check.py
+```
