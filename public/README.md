@@ -107,3 +107,7 @@ WSLでこのディレクトリから`python3 test_local.py`を実行すると、
 ローカルで公開Composeの解決、HTTPポート非公開・内部ネットワーク・digest必須の検査、設定の異常値拒否、deployment/ロールの許可・拒否を検証しました。既存Hub 5.5.0 / LTIAuthenticator 1.6.3 / DockerSpawner 14.0.0の一時コンテナで設定をロードしました。実ドメインのTLS/LTI、レジストリ配布、同時負荷、復元は未検証です。
 
 仕様参照: [LTI設定](https://ltiauthenticator.readthedocs.io/en/latest/lti13/getting-started.html)、[LTI設定リファレンス](https://ltiauthenticator.readthedocs.io/en/latest/lti13/reference.html)、[JupyterHubの同時実行上限](https://jupyterhub.readthedocs.io/en/latest/reference/api/app.html)。
+
+## 小容量ホストでの事前準備
+
+[起動せずに進めるAWS準備](aws-preparation.md)では、読み取り専用の容量確認とHTTPS登録情報の取り込みを扱います。総2GiBの既存ホストでは設定準備までに留め、学習者コンテナは起動しません。
